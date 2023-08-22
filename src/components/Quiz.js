@@ -9,15 +9,18 @@ export default function Quiz() {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const [userAnswer, setUserAnswer] = useState(() => []);
+  const [userAnswers, setUserAnswers] = useState([]);
   const [showAnswer, setShowAnswer] = useState(false);
   const [showAnswerBtn, setShowAnswerBtn] = useState(true);
-   
+  const [active, setActive] = useState(true);
+  const [score, setScore] = useState(0);
+  const [buttonClickable, setButtonClickable] = useState(true);
+  
 
   // This hook fetches data once
   // Added error handling to prevent errors filling up the UI
   useEffect(() => {
-    fetch("https://opentdb.com/api.php?amount=10&category=18&difficulty=hard&type=multiple")
+    fetch("https://opentdb.com/api.php?amount=5&category=18&difficulty=easy&type=multiple")
       .then(result => {
         if (!result.ok) {
           throw new Error("This is an HTTP error", result.status);
@@ -33,6 +36,7 @@ export default function Quiz() {
           const correctOption = eachQuiz.correct_answer;
           const options = incorrectOptions.concat(correctOption);
           const randomOptions = createRandomOptions(options);
+          
           return {
             ...eachQuiz,
             options: randomOptions,
@@ -55,6 +59,7 @@ export default function Quiz() {
   }, [togglePlayAgain])
 
 
+
   // Shuffles both the incorrect and correct answers
   function createRandomOptions(arr) {
       
@@ -70,28 +75,42 @@ export default function Quiz() {
     return randomOptionsArr;
   }
 
-  // Helps check for a click on our options and handles necessary functions
-  function handleClick(option, correctAnswer, position, questionIndex) {
-    checkEachAnswer(option, correctAnswer, position);
+
+  // Helps check for a click on our options and handles necessary logic
+  function handleClick(option, position, questionIndex, event) {
+    // checkEachAnswer(option, correctAnswer);
+    setActive(false);
+    setButtonClickable(true);
+    userAnswers[questionIndex] = option; // Resets the option at the question's index with the new option we select until we move to a new question. Inspired by Stack Overflow.
 
     // Checks if the index of the current question when clicked is the index of the quiz rendered initially
     const updatedQuiz = quiz.map((eachQuiz, index) =>  
       index === questionIndex 
       ? {...eachQuiz, clickedOptionIndex: position} 
-      : eachQuiz);
+      : eachQuiz
+    );
     setQuiz(updatedQuiz);
   }
 
+  
+  // console.log(score);
 
-   // Checks if the clicked option is the correct one and also checks if it was already picked before and prevents it from being added to the userAnswer array
-  function checkEachAnswer(option, correctAnswer, optIndex) {
-
-
-    console.log(optIndex);
+  // It was supposed to check if the clicked option is the correct one and also checks if it was already picked before and prevents it from being added to the userAnswer array but found a better way
+  /* function checkEachAnswer(option, correctAnswer) {
 
     if (option === correctAnswer) {
+      setScore(score + 1);  
+    }
+
+    else if (option !== correctAnswer && score > 0) {
+      setScore(score - 1);
+    }
+
+
+
+
+     if (option === correctAnswer && !active) {
       console.log("Correct");
-      // setColorToggle(true);
      
       // Check if clicked answer exists before and reset the value back to what was clicked to eliminate same answer repeated in the userAnswer array
       if (userAnswer.includes(option)) {
@@ -108,20 +127,18 @@ export default function Quiz() {
         setUserAnswer(prevValue => {
           return [...prevValue, option];
         });
+       
       }
 
     }
     else {
       console.log(option, "is incorrect", );
-      // setColorToggle(false);
-    }
 
-    // I could try it this way or I could just set it and target the active state in the pure css file.
-    // And then check to see if showAnswer is true and display a different color for those we got right or wrong.
-
-    // I can move this styles variable into  outside of this function and then use an if statement to check if option is correct, then declare a variable to check if showAnswer is true, and set a color, else, we set a different color
-    
-  }
+      setUserAnswer(prevValue => {
+        return [...prevValue, prevValue[optIndex] = option]
+      })
+    } 
+  } */
 
 
   const quizElements = quiz && quiz.map((eachQuiz, questionIndex) => {
@@ -131,25 +148,31 @@ export default function Quiz() {
 
     return (
       <>
-        <div className="quiz-wrapper">
+        <div className="quiz-wrapper" key={questionIndex}>
           <p className="question">{question}</p>
           <ul>
             {quiz && options.map((option, index) => 
               {
                 return (
-                  <li 
-                    className={
-                      `option 
-                      ${clickedOptionIndex === index 
-                        ? "active" : null } 
-                      ${showAnswer && option === correctOption ? "correct" : ""}
-                      ${showAnswer && option !== correctOption ? "wrong" : ""}`
-                    }
-                    key={index}
-                    onClick={() => 
-                      handleClick(option, correctOption, index, questionIndex)}
-                  >
-                    {option}
+                  <li key={option}>
+                    <button
+                      disabled={!buttonClickable}
+                      className={
+                        `option 
+                        ${clickedOptionIndex === index
+                          ? "active" : "" } 
+                        ${showAnswer && option === correctOption
+                          ? "correct" : "" }
+                        ${showAnswer && option !== correctOption && active
+                          ? "wrong" : "" }`
+                      }
+                      onClick={
+                        () => 
+                        handleClick(option, index, questionIndex)
+                      }
+                    >
+                      {option}
+                    </button>
                   </li>
                 )
               })
@@ -161,7 +184,8 @@ export default function Quiz() {
     )
   });
 
-  console.log(userAnswer);
+
+  // console.log(userAnswers);
 
 
   // Displays the answers when we click on the Check Again button
@@ -169,6 +193,13 @@ export default function Quiz() {
     setShowAnswer(true);
     setPlayAgain(true);
     setShowAnswerBtn(false);
+    setButtonClickable(false);
+    const matched = userAnswers.filter((elem, index) => {
+      return elem === quiz[index].correct_answer;
+    }); // Filters out the answers that match the correct answer initially stored with the question.
+
+    setScore(matched.length);
+    // console.log(matched);
   }
 
 
@@ -178,18 +209,21 @@ export default function Quiz() {
     setPlayAgain(false);
     setShowAnswer(false);
     setShowAnswerBtn(true);
-    setUserAnswer([]);
+    setUserAnswers([]);
+    setScore(0);
+    setButtonClickable(true);
   }
+
 
   return (
     <>
       {loading && <h3>Currently loading...</h3>}
-      {error && <h3>An error occurred while fetching data!</h3>}
+      {error && <h3>An error occurred while fetching data! Please check your network connection</h3>}
       {quiz && <h1 className="topic">Topic: Computer Science</h1>}
       
       {quiz && quizElements}
 
-      {showAnswer && <p>You scored {userAnswer.length} / {quiz.length}</p>}
+      {showAnswer && <p>You scored {score} / {quiz.length}</p>}
 
       {quiz && showAnswerBtn && 
         <button 

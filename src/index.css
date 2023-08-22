@@ -71,6 +71,8 @@ ul {
   padding: 6px 10px;
   margin: 12px 0;
   border: 1px solid blue;
+  width: 100%;
+  font-size: 16px;
 }
 
 .active {
@@ -78,12 +80,12 @@ ul {
   color: white;
 }
 
-li.correct {
+.correct {
   background-color: #dff0d8 ;
   color: #4caf50;
 }
 
-li.wrong {
+.wrong {
   background-color: #f2dede ;
   color: #d9534f;
 }
@@ -121,6 +123,11 @@ li.wrong {
     text-align: center;
   }
 
+  .option {
+    width: 100%;
+    margin: 10px;
+  }
+
   ul {
     display: flex;
     flex-direction: row;
@@ -129,3 +136,4 @@ li.wrong {
     flex-wrap: wrap;
   }
 }
+

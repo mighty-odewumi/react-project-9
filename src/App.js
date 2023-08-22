@@ -1,20 +1,12 @@
 import { useState } from "react";
 import Quiz from "./components/Quiz";
 
-const quizId = [
-  {"id": 0},
-  {"id": 1},
-  {"id": 2},
-  {"id": 3},
-  {"id": 4},
-]
 
 export default function App() {
   
   const [startQuiz, setStartQuiz] = useState(false);
 
   function loadQuiz() {
-    // console.log(startQuiz);
     setStartQuiz(true);
   }
 
@@ -35,7 +27,7 @@ export default function App() {
 
       {startQuiz && 
         <main> 
-          <Quiz key={quizId.map(myId => myId.id)}/>
+          <Quiz />
         </main>
       }
     </>
