@@ -20,7 +20,7 @@ export default function Quiz() {
   // This hook fetches data once
   // Added error handling to prevent errors filling up the UI
   useEffect(() => {
-    fetch("https://opentdb.com/api.php?amount=5&category=18&difficulty=easy&type=multiple")
+    fetch("https://opentdb.com/api.php?amount=8&category=18&difficulty=easy&type=multiple")
       .then(result => {
         if (!result.ok) {
           throw new Error("This is an HTTP error", result.status);
